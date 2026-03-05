@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+}
+
+model File {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  title         String
+  description   String?
+  tags          String?
+  fileName      String
+  fileSize      Int
+  mimeType      String
+  filePath      String
+  downloadCount Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  downloads     DownloadLog[]
+}
+
+model DownloadLog {
+  id        String   @id @default(cuid())
+  fileId    String
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  timestamp DateTime @default(now())
+  userAgent String?
+  ipHash    String?
+}

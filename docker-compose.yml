@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/prisma/dev.db:/app/prisma/dev.db
+    environment:
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=supersecret
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend

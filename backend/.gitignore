@@ -1,0 +1,9 @@
+node_modules
+.env
+uploads
+*.db
+*.db-journal
+backend.log
+server.log
+frontend.log
+dist
