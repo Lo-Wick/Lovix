@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
-import { Download, File as FileIcon, Loader2, AlertCircle } from "lucide-react";
+import { Download, File as FileIcon, Loader2, AlertCircle, QrCode as QrIcon } from "lucide-react";
+import QRCode from "qrcode";
 
 interface PublicFile {
     slug: string;
@@ -17,6 +18,7 @@ const PublicFilesList = () => {
     const [files, setFiles] = useState<PublicFile[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [qrModal, setQrModal] = useState<{ url: string, title: string } | null>(null);
 
     useEffect(() => {
         const fetchPublicFiles = async () => {
@@ -36,6 +38,12 @@ const PublicFilesList = () => {
     const handleDownload = (slug: string, fileName: string) => {
         // Ideally the backend URL should be an env variable exported from somewhere
         window.location.href = `http://localhost:5000/api/files/download/${slug}`;
+    };
+
+    const handleShowQr = async (slug: string, title: string) => {
+        const url = `http://localhost:5000/api/files/download/${slug}`;
+        const dataUrl = await QRCode.toDataURL(url);
+        setQrModal({ url: dataUrl, title: `Télécharger: ${title}` });
     };
 
     const formatFileSize = (bytes: number) => {
@@ -104,7 +112,15 @@ const PublicFilesList = () => {
                                         </div>
                                     </div>
 
-                                    <div className="sm:shrink-0 flex sm:flex-col justify-end">
+                                    <div className="sm:shrink-0 flex sm:flex-col justify-end gap-2">
+                                        <button
+                                            onClick={() => handleShowQr(file.slug, file.title)}
+                                            className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
+                                            title="QR Code pour ce fichier"
+                                        >
+                                            <QrIcon className="w-4 h-4" />
+                                            Scanner
+                                        </button>
                                         <button
                                             onClick={() => handleDownload(file.slug, file.fileName)}
                                             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
@@ -122,6 +138,25 @@ const PublicFilesList = () => {
                     </div>
                 </div>
             </div>
+
+            {/* QR Code Modal */}
+            {qrModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setQrModal(null)}>
+                    <div className="rounded-lg bg-white p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-4 text-center line-clamp-1">{qrModal.title}</h3>
+                        <img src={qrModal.url} alt="QR Code" className="h-64 w-64 mx-auto" />
+                        <p className="mt-4 text-sm text-gray-500 text-center">
+                            Scannez ce QR code pour télécharger directement le fichier.
+                        </p>
+                        <button
+                            className="mt-6 w-full rounded-md bg-blue-600 py-2 text-white font-medium hover:bg-blue-700 transition"
+                            onClick={() => setQrModal(null)}
+                        >
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
